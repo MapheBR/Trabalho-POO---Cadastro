@@ -1,113 +1,119 @@
-from abc import ABC, abstractmethod 
+from abc import ABC, abstractmethod
 import time
-import sys 
-    
-def exibir_resultados_gradualmente(linhas, pausa_segundos=0.5):
-    print("\n\n--- 🏁 Resultados Finais (Exibição Pausada) ---") 
-    time.sleep(pausa_segundos * 1.5) 
-    
-    for linha in linhas: 
-        print(linha)
-        sys.stdout.flush() 
-        time.sleep(pausa_segundos) 
-    print("--------------------------------------------------")
-    print("✅ Fim da Execução.") 
+import sys
 
-class Usuario(ABC): 
-    def __init__(self, nome, email): 
-        self.nome = nome 
-        self.email = email  
 
-    @abstractmethod 
-    def get_tipo(self):
-        pass 
-    def __str__(self): 
-        return f"Nome: {self.nome}, Email: {self.email}" 
+def display_results_progressively(lines, pause_seconds=0.5):
+    print("\n\nResultados finais\n\n")
+    time.sleep(pause_seconds * 1.5)
 
-class UsuarioAdmin(Usuario): 
-    def __init__(self, nome, email, nivel_acesso):
-        super().__init__(nome, email) 
-        self.nivel_acesso = nivel_acesso 
+    for line in lines:
+        print(line)
+        sys.stdout.flush()
+        time.sleep(pause_seconds)
+    print("\nFim da execução.")
 
-    def get_tipo(self):
+
+class User(ABC):
+    def __init__(self, name, email):
+        self.name = name
+        self.email = email
+
+    @abstractmethod
+    def get_type(self):
+        pass
+
+    def __str__(self):
+        return f"Nome: {self.name}, Email: {self.email}"
+
+
+class AdminUser(User):
+    def __init__(self, name, email, access_level):
+        super().__init__(name, email)
+        self.access_level = access_level
+
+    def get_type(self):
         return "Administrador"
-    
-    def __str__(self):
-        return f"{super().__str__()} | Tipo: {self.get_tipo()}, Nível: {self.nivel_acesso}" 
-
-class UsuarioComum(Usuario): 
-    def __init__(self, nome, email, departamento): 
-        super().__init__(nome, email) 
-        self.departamento = departamento 
-
-    def get_tipo(self): 
-        return "Comum" 
 
     def __str__(self):
-        return f"{super().__str__()} | Tipo: {self.get_tipo()}, Departamento: {self.departamento}" 
+        return f"{super().__str__()} | Tipo: {self.get_type()}, Nível: {self.access_level}"
 
-class UsuarioFactory: 
-    @staticmethod 
-    def criar_usuario(tipo, nome, email, **kwargs): 
-        if tipo.lower() == "admin": 
-            return UsuarioAdmin(nome, email, kwargs.get('nivel_acesso', 'Médio'))
-        elif tipo.lower() == "comum": 
-            return UsuarioComum(nome, email, kwargs.get('departamento', 'Geral'))
+
+class RegularUser(User):
+    def __init__(self, name, email, department):
+        super().__init__(name, email)
+        self.department = department
+
+    def get_type(self):
+        return "Comum"
+
+    def __str__(self):
+        return f"{super().__str__()} | Tipo: {self.get_type()}, Departamento: {self.department}"
+
+
+class UserFactory:
+    @staticmethod
+    def create_user(user_type, name, email, **kwargs):
+        if user_type.lower() == "admin":
+            return AdminUser(name, email, kwargs.get('access_level', 'Médio'))
+        elif user_type.lower() == "regular" or user_type.lower() == 'comum':
+            return RegularUser(name, email, kwargs.get('department', 'Geral'))
         else:
-            raise ValueError(f"Tipo de usuário desconhecido: {tipo}") 
+            raise ValueError(f"Tipo de usuário desconhecido: {user_type}")
 
-class GerenciadorDeUsuarios: 
-    _instancia = None 
 
-    def __new__(cls): 
-        if cls._instancia is None: 
-            cls._instancia = super(GerenciadorDeUsuarios, cls).__new__(cls) 
-            cls._instancia.usuarios = [] 
-        return cls._instancia 
+class UserManager:
+    _instance = None
 
-    def adicionar_usuario(self, usuario):
-        self.usuarios.append(usuario)
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(UserManager, cls).__new__(cls)
+            cls._instance.users = []
+        return cls._instance
 
-    def listar_usuarios(self):
-        linhas = [] 
-        if not self.usuarios: 
-            linhas.append("❌ Não há usuários cadastrados.")
+    def add_user(self, user):
+        self.users.append(user)
+
+    def list_users(self):
+        lines = []
+        if not self.users:
+            lines.append("Não há usuários cadastrados.")
         else:
-            linhas.append("--- 👥 LISTA DE USUÁRIOS CADASTRADOS (Gerenciador Singleton) ---")
-            for u in self.usuarios:
-                linhas.append(f"- {u}")
-            linhas.append("-----------------------------------------------------------------")
-        return linhas 
-
-print("Iniciando o sistema de cadastro e configurando Singletons/Factories...")
-usuario1 = UsuarioFactory.criar_usuario("admin", "Alice Silva", "alice@empresa.com", nivel_acesso="Alto")
-usuario2 = UsuarioFactory.criar_usuario("comum", "Bruno Lima", "bruno@empresa.com", departamento="TI")
-usuario3 = UsuarioFactory.criar_usuario("comum", "Carla Reis", "carla@empresa.com")
+            lines.append("Usuários cadastrados:")
+            for user in self.users:
+                lines.append(f"- {user}")
+        return lines
 
 
-gerenciador1 = GerenciadorDeUsuarios() 
-gerenciador1.adicionar_usuario(usuario1) 
-gerenciador1.adicionar_usuario(usuario2) 
-
-gerenciador2 = GerenciadorDeUsuarios() 
-gerenciador2.adicionar_usuario(usuario3) 
+print("Iniciando o sistema de cadastro e configurando padrões Singleton/Fábrica...")
+admin_user = UserFactory.create_user("admin", "Alice Silva", "alice@company.com", access_level="Alto")
+it_user = UserFactory.create_user("regular", "Bruno Lima", "bruno@company.com", department="TI")
+regular_user = UserFactory.create_user("regular", "Carla Reis", "carla@company.com")
 
 
-resultados_finais = [
-    "--- Status do Sistema ---",
-    f"Usuário 1 (Admin) criado: {usuario1.nome} - Tipo: {usuario1.get_tipo()}", 
-    f"Usuário 2 (Comum) criado: {usuario2.nome} - Tipo: {usuario2.get_tipo()}",
-    f"Usuário 3 (Comum) criado: {usuario3.nome} - Tipo: {usuario3.get_tipo()}",
+user_manager1 = UserManager()
+user_manager1.add_user(admin_user)
+user_manager1.add_user(it_user)
+
+user_manager2 = UserManager()
+user_manager2.add_user(regular_user)
+
+
+final_results = [
+    "Status do sistema",
+    f"Usuário 1 (Admin) criado: {admin_user.name} - Tipo: {admin_user.get_type()}",
+    f"Usuário 2 (Comum) criado: {it_user.name} - Tipo: {it_user.get_type()}",
+    f"Usuário 3 (Comum) criado: {regular_user.name} - Tipo: {regular_user.get_type()}",
     "",
-    f"Verificação Singleton: Gerenciador1 ID: {id(gerenciador1)}", 
-    f"Verificação Singleton: Gerenciador2 ID: {id(gerenciador2)}", 
+    f"Verificação Singleton: Gerenciador1 ID: {id(user_manager1)}",
+    f"Verificação Singleton: Gerenciador2 ID: {id(user_manager2)}",
 ]
 
-if id(gerenciador1) == id(gerenciador2): 
-    resultados_finais.append("✅ Confirmação: As duas variáveis apontam para a mesma instância Singleton.")
+if id(user_manager1) == id(user_manager2):
+    final_results.append("Sucesso: O padrão Singleton está funcionando corretamente.")
 else:
-    resultados_finais.append("❌ Erro: O padrão Singleton falhou.")
+    final_results.append("Erro: O padrão Singleton falhou.")
 
-resultados_finais.extend(gerenciador1.listar_usuarios())
+final_results.extend(user_manager1.list_users())
 
-exibir_resultados_gradualmente(resultados_finais, pausa_segundos=0.3) 
+display_results_progressively(final_results, pause_seconds=0.3)
