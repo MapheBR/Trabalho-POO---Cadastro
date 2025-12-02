@@ -85,7 +85,7 @@ class UserManager:
         return lines
 
 
-print("Iniciando o sistema de cadastro e configurando padrões Singleton/Fábrica...")
+print("Iniciando o sistema de cadastro...")
 admin_user = UserFactory.create_user("admin", "Alice Silva", "alice@company.com", access_level="Alto")
 it_user = UserFactory.create_user("regular", "Bruno Lima", "bruno@company.com", department="TI")
 regular_user = UserFactory.create_user("regular", "Carla Reis", "carla@company.com")
@@ -110,9 +110,9 @@ final_results = [
 ]
 
 if id(user_manager1) == id(user_manager2):
-    final_results.append("Sucesso: O padrão Singleton está funcionando corretamente.")
+    final_results.append("Sucesso")
 else:
-    final_results.append("Erro: O padrão Singleton falhou.")
+    final_results.append("Erro")
 
 final_results.extend(user_manager1.list_users())
 
